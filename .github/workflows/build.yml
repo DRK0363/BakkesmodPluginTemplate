@@ -14,9 +14,11 @@ jobs:
 
       - name: Setup BakkesMod SDK
         run: |
-          git clone https://github.com/bakkesmodorg/BakkesMod2-Plugins.git sdk
-          xcopy /E /I sdk\bakkesmod bakkesmod
-          xcopy /E /I sdk\bakkesmod\include bakkesmod\include
+          git clone --depth 1 https://github.com/bakkesmodorg/BakkesMod2-Plugins.git temp_sdk
+          # Klasör yapısına bakmadan bakkesmod klasörünü bul ve ana dizine kopyala
+          powershell -Command "Get-ChildItem -Path 'temp_sdk' -Filter 'bakkesmod' -Recurse | Select-Object -First 1 | ForEach-Object { Copy-Item -Path $_.FullName -Destination '.' -Recurse -Force }"
+          # Include klasörünü de garantiye alalım
+          powershell -Command "if (Test-Path 'bakkesmod\include') { Copy-Item -Path 'bakkesmod\include\*' -Destination 'bakkesmod' -Recurse -Force }"
 
       - name: Build Plugin
         run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64
