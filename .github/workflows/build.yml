@@ -12,21 +12,18 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Download BakkesMod SDK
+      - name: Setup BakkesMod SDK
         run: |
-          powershell -Command "Invoke-WebRequest -Uri 'https://github.com/bakkesmodorg/BakkesMod2-Plugins/archive/refs/heads/master.zip' -OutFile 'sdk.zip'"
-          powershell -Command "Expand-Archive -Path 'sdk.zip' -DestinationPath 'sdk_temp'"
-          powershell -Command "Move-Item -Path 'sdk_temp\BakkesMod2-Plugins-master' -Destination 'sdk'"
-          echo "BAKKESMOD_SDK_PATH=$github_workspace\sdk" >> $GITHUB_ENV
+          git clone https://github.com/bakkesmodorg/BakkesMod2-Plugins.git sdk
+          move sdk\bakkesmod $github_workspace\
 
       - name: Build Plugin
-        run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64 /p:BakkesModPath="$github_workspace\sdk"
+        run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SteamPFPs-Plugin
           path: |
-            x64/Release/*.dll
-            Release/*.dll
-            **/Release/*.dll
+             x64/Release/*.dll
+             Release/*.dll
