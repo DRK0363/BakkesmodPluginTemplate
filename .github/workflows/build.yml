@@ -12,21 +12,22 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Download and Force-Place SDK
+      - name: Setup BakkesMod SDK
         run: |
           git clone --depth 1 https://github.com/bakkesmodorg/BakkesMod2-Plugins.git sdk_temp
-          # Sadece gereken klasörü projenin tam içine kopyalıyoruz
+          # SDK klasörünü projenin ana dizinine kopyalar
           xcopy /E /I sdk_temp\bakkesmod bakkesmod
-          # Derleyiciye bu yolu doğrudan tanıtalım
-          echo "BAKKESMODSDK_PATH=$github_workspace" >> $GITHUB_ENV
+          # Derleyiciye kütüphanelerin tam yerini söyler
+          echo "BAKKESMOD_SDK_PATH=$github_workspace" >> $GITHUB_ENV
 
       - name: Build Plugin
-        run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64 /p:AdditionalIncludeDirectories="$github_workspace"
-
+        run: |
+          msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64 /p:IncludePath="$github_workspace;$github_workspace\bakkesmod\include;$(IncludePath)"
+        
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
           name: SteamPFPs-Plugin
           path: |
-             x64/Release/*.dll
-             Release/*.dll
+            **/Release/*.dll
+            x64/Release/*.dll
