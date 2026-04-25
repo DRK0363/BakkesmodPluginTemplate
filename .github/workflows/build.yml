@@ -12,16 +12,16 @@ jobs:
       - name: Add MSBuild to PATH
         uses: microsoft/setup-msbuild@v2
 
-      - name: Setup BakkesMod SDK
+      - name: Download and Force-Place SDK
         run: |
-          git clone --depth 1 https://github.com/bakkesmodorg/BakkesMod2-Plugins.git temp_sdk
-          # Klasör yapısına bakmadan bakkesmod klasörünü bul ve ana dizine kopyala
-          powershell -Command "Get-ChildItem -Path 'temp_sdk' -Filter 'bakkesmod' -Recurse | Select-Object -First 1 | ForEach-Object { Copy-Item -Path $_.FullName -Destination '.' -Recurse -Force }"
-          # Include klasörünü de garantiye alalım
-          powershell -Command "if (Test-Path 'bakkesmod\include') { Copy-Item -Path 'bakkesmod\include\*' -Destination 'bakkesmod' -Recurse -Force }"
+          git clone --depth 1 https://github.com/bakkesmodorg/BakkesMod2-Plugins.git sdk_temp
+          # Sadece gereken klasörü projenin tam içine kopyalıyoruz
+          xcopy /E /I sdk_temp\bakkesmod bakkesmod
+          # Derleyiciye bu yolu doğrudan tanıtalım
+          echo "BAKKESMODSDK_PATH=$github_workspace" >> $GITHUB_ENV
 
       - name: Build Plugin
-        run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64
+        run: msbuild BakkesPluginTemplate.vcxproj /p:Configuration=Release /p:Platform=x64 /p:AdditionalIncludeDirectories="$github_workspace"
 
       - name: Upload Artifact
         uses: actions/upload-artifact@v4
@@ -30,4 +30,3 @@ jobs:
           path: |
              x64/Release/*.dll
              Release/*.dll
-             **/Release/*.dll
